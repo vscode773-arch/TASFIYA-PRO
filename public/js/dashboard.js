@@ -33,40 +33,39 @@ const api = {
 };
 
 // Initialize OneSignal
+// Initialize OneSignal
 async function initOneSignal() {
     try {
-        console.log('🔔 Initializing OneSignal...');
         const res = await fetch('/api/config');
-        if (!res.ok) throw new Error(`Config fetch failed: ${res.status}`);
+        if (!res.ok) {
+            alert('Debug: Failed to fetch config');
+            return;
+        }
 
         const config = await res.json();
-        console.log('🔔 Config loaded, App ID:', config.oneSignalAppId);
 
         if (config.oneSignalAppId) {
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function (OneSignal) {
-                console.log('🔔 OneSignal SDK Callback Started');
-                await OneSignal.init({
-                    appId: config.oneSignalAppId,
-                    allowLocalhostAsSecureOrigin: true,
-                    notifyButton: {
-                        enable: true, // Enable the bell button
-                    },
-                });
-                console.log('🔔 OneSignal Init Completed');
+                try {
+                    await OneSignal.init({
+                        appId: config.oneSignalAppId,
+                        allowLocalhostAsSecureOrigin: true,
+                        notifyButton: { enable: true }
+                    });
 
-                // Check Permission
-                console.log('🔔 Permission State:', Notification.permission);
-                if (Notification.permission === 'default') {
-                    console.log('🔔 Prompting for permission...');
-                    OneSignal.Slidedown.promptPush();
+                    if (Notification.permission === 'default') {
+                        OneSignal.Slidedown.promptPush();
+                    }
+                } catch (err) {
+                    alert('Debug: OneSignal Init Error: ' + err.message);
                 }
             });
         } else {
-            console.warn('⚠️ OneSignal App ID missing in config');
+            alert('Debug: OneSignal App ID is MISSING from server config! Please check Render Environment Variables.');
         }
     } catch (e) {
-        console.error('❌ Failed to init OneSignal:', e);
+        alert('Debug: General Error: ' + e.message);
     }
 }
 
