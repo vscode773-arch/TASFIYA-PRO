@@ -282,6 +282,46 @@ app.get('/api/reports', async (req, res) => {
     }
 });
 
+// API: Get Single Report Details
+app.get('/api/reports/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        // Get reconciliation with joins
+        const recQuery = `
+            SELECT r.*,
+                   c.name as cashier_name,
+                   c.cashier_number,
+                   a.name as accountant_name,
+                   b.branch_name
+            FROM reconciliations r
+            JOIN cashiers c ON r.cashier_id = c.id
+            JOIN accountants a ON r.accountant_id = a.id
+            LEFT JOIN branches b ON c.branch_id = b.id
+            WHERE r.id = $1
+        `;
+
+        const recResult = await pool.query(recQuery, [id]);
+
+        if (recResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        const reconciliation = recResult.rows[0];
+
+        // Note: Bank receipts and cash receipts tables don't exist in cloud DB
+        // Return basic reconciliation data only
+        res.json({
+            ...reconciliation,
+            bankReceipts: [],
+            cashReceipts: []
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Start Server
 // Ensure tables exist
 const initDB = async () => {
