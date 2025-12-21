@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | تصفية برو ويب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="login-card fade-in">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="background: linear-gradient(to right, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">تصفية برو</h1>
+                <p style="color: var(--text-secondary);">لوحة التحكم عبر الويب</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>اسم المستخدم</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">دخول</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const btn = e.target.querySelector('button');
+            
+            btn.textContent = 'جاري التحقق...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/';
+                } else {
+                    alert(data.message || 'خطأ في تسجيل الدخول');
+                    btn.textContent = 'دخول';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert('حدث خطأ في الاتصال');
+                btn.textContent = 'دخول';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

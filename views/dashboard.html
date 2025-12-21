@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | تصفية برو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">تصفية برو ويب</div>
+        <div>
+            <span id="userName" style="margin-left: 1rem; color: var(--text-secondary);"></span>
+            <button onclick="logout()"
+                style="background: transparent; border: 1px solid var(--border); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;">خروج</button>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي التصفيات</div>
+                <div class="stat-value" id="totalReconciliations">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">إجمالي المقبوضات</div>
+                <div class="stat-value" style="color: var(--success);" id="totalReceipts">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">إجمالي المبيعات</div>
+                <div class="stat-value" id="totalSales">-</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="stat-card" style="margin-bottom: 2rem;">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
+                <div>
+                    <label>من تاريخ</label>
+                    <input type="date" id="filterDateFrom">
+                </div>
+                <div>
+                    <label>إلى تاريخ</label>
+                    <input type="date" id="filterDateTo">
+                </div>
+                <div>
+                    <label>الفرع</label>
+                    <select id="filterBranch" class="form-select">
+                        <option value="">الكل</option>
+                    </select>
+                </div>
+                <div>
+                    <label>الكاشير</label>
+                    <select id="filterCashier" class="form-select">
+                        <option value="">الكل</option>
+                    </select>
+                </div>
+                <div>
+                    <label>الحالة</label>
+                    <select id="filterStatus" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="completed">مكتملة</option>
+                        <option value="draft">مسودة</option>
+                    </select>
+                </div>
+                <button onclick="filters.apply()" class="btn">بحث</button>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم التصفية</th>
+                        <th>التاريخ</th>
+                        <th>الكاشير</th>
+                        <th>المحاسب</th>
+                        <th>إجمالي المقبوضات</th>
+                        <th>مبيعات النظام</th>
+                        <th>الحالة</th>
+                        <th class="text-end">اجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsTable">
+                    <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Details Modal (Simple Overlay) -->
+    <div id="detailsModal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; padding: 2rem; overflow-y: auto;">
+        <div class="login-card fade-in" style="max-width: 800px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h2>تفاصيل التصفية</h2>
+                <button onclick="closeModal()"
+                    style="background: none; border: none; color: var(--text-primary); font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="/js/dashboard.js"></script>
+</body>
+
+</html>
