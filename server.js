@@ -160,6 +160,9 @@ app.post('/api/sync/push', async (req, res) => {
         if (data.bankReceipts) {
             const brIds = data.bankReceipts.map(br => br.id);
             for (const br of data.bankReceipts) {
+                // Determine operation type (backward compatibility)
+                const opType = br.operation_type || br.bank_name || 'عملية بنكية';
+
                 await client.query(`
                     INSERT INTO bank_receipts (id, reconciliation_id, bank_name, amount)
                     VALUES ($1, $2, $3, $4)
@@ -167,7 +170,7 @@ app.post('/api/sync/push', async (req, res) => {
                     reconciliation_id = EXCLUDED.reconciliation_id,
                     bank_name = EXCLUDED.bank_name,
                     amount = EXCLUDED.amount
-                `, [br.id, br.reconciliation_id, br.bank_name, br.amount]);
+                `, [br.id, br.reconciliation_id, opType, br.amount]);
             }
             if (brIds.length > 0) {
                 const placeholders = brIds.map((_, i) => `$${i + 1}`).join(',');
