@@ -156,20 +156,8 @@ async function viewDetails(id) {
             data.bankReceipts.forEach(b => {
                 bankHtml += `
                     <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--border);">
-                        <span>${b.bank_name || 'صراف'}</span>
+                        <span>${b.bank_name || 'عملية بنكية'}</span>
                         <span>${formatCurrency(b.amount)}</span>
-                    </div>
-                `;
-            });
-        }
-
-        let cashHtml = '';
-        if (data.cashReceipts && data.cashReceipts.length > 0) {
-            data.cashReceipts.forEach(c => {
-                cashHtml += `
-                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--border);">
-                        <span>${c.notes || 'نقدي'}</span>
-                        <span>${formatCurrency(c.amount)}</span>
                     </div>
                 `;
             });
@@ -216,11 +204,6 @@ async function viewDetails(id) {
             <h3 style="margin-top: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">المقبوضات البنكية</h3>
             <div style="background: var(--bg-primary); border-radius: 0.5rem; margin-top: 0.5rem;">
                 ${bankHtml || '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">لا توجد مقبوضات بنكية</div>'}
-            </div>
-
-            <h3 style="margin-top: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">المقبوضات النقدية</h3>
-            <div style="background: var(--bg-primary); border-radius: 0.5rem; margin-top: 0.5rem;">
-                ${cashHtml || '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">لا توجد مقبوضات نقدية</div>'}
             </div>
         `;
 

@@ -368,6 +368,15 @@ tr:hover {
         overflow-y: auto;
         padding-bottom: 2rem;
         /* Extra padding for scrolling */
+        /* Fix for RTL cutting off content */
+        direction: rtl;
+        text-align: right;
+    }
+
+    body {
+        overflow-x: hidden;
+        /* Prevent horizontal scroll */
+        width: 100%;
     }
 
     .detail-grid {
