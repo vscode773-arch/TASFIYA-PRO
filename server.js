@@ -162,8 +162,22 @@ app.post('/api/sync/push', async (req, res) => {
         }
 
         // 4. Sync Reconciliations
+        let trulyNewReconciliations = [];
+
         if (data.reconciliations) {
             const recIds = data.reconciliations.map(r => r.id);
+
+            // OPTIMIZATION: Check which IDs are actually NEW (not in DB)
+            if (recIds.length > 0) {
+                const placeholders = recIds.map((_, i) => `$${i + 1}`).join(',');
+                const existRes = await client.query(`SELECT id FROM reconciliations WHERE id IN (${placeholders})`, recIds);
+                const existingIds = new Set(existRes.rows.map(row => row.id));
+
+                trulyNewReconciliations = data.reconciliations.filter(r =>
+                    r.status === 'completed' && !existingIds.has(r.id)
+                );
+            }
+
             for (const r of data.reconciliations) {
                 await client.query(`
                     INSERT INTO reconciliations (
@@ -216,23 +230,16 @@ app.post('/api/sync/push', async (req, res) => {
             }
         }
 
-        // 6. Send Notifications
-        if (data.reconciliations && data.reconciliations.length > 0) {
-            // Find completed reconciliations in this batch
-            const newRecs = data.reconciliations.filter(r => r.status === 'completed');
+        // 6. Send Notifications (ONLY for truly new items)
+        if (trulyNewReconciliations && trulyNewReconciliations.length > 0) {
+            const count = trulyNewReconciliations.length;
+            const lastRec = trulyNewReconciliations[0];
+            const msg = count === 1
+                ? `تصفية جديدة #${lastRec.reconciliation_number} من ${lastRec.cashier_name}`
+                : `تم إضافة ${count} تصفيات جديدة`;
 
-            if (newRecs.length > 0) {
-                // We should ideally check if they are NEW (not just updated), but for now notifying on sync is okay
-                // To avoid spam, we can just check the first one or send a generic message
-                const count = newRecs.length;
-                const lastRec = newRecs[0];
-                const msg = count === 1
-                    ? `تصفية جديدة #${lastRec.reconciliation_number} من ${lastRec.cashier_name}`
-                    : `تم مزامنة ${count} تصفيات جديدة`;
-
-                // Don't await, send in background
-                sendNotification('تصفية جديدة 💰', msg).catch(console.error);
-            }
+            // Fire and forget notification
+            sendNotification('تصفية جديدة 💰', msg).catch(console.error);
         }
 
         // 6. Sync Cash Receipts
