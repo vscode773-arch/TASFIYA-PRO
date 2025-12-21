@@ -352,19 +352,22 @@ tr:hover {
 
     /* Modal adjustments for mobile */
     #detailsModal {
-        padding: 0.5rem;
+        padding: 0;
         align-items: flex-end;
-        /* Show at bottom on mobile */
+        /* Show at bottom */
     }
 
     #detailsModal .login-card {
-        max-width: 100%;
-        border-radius: 1rem 1rem 0 0;
-        /* Rounded top only */
-        max-height: 90vh;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 1.5rem 1.5rem 0 0;
+        max-height: 85vh;
+        /* Keep some space at top */
+        height: auto;
+        margin: 0;
         overflow-y: auto;
-        margin-bottom: 0;
-        animation: slideUp 0.3s ease-out;
+        padding-bottom: 2rem;
+        /* Extra padding for scrolling */
     }
 
     .detail-grid {
