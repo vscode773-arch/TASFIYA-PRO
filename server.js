@@ -167,14 +167,18 @@ app.post('/api/sync/push', async (req, res) => {
         if (data.reconciliations) {
             const recIds = data.reconciliations.map(r => r.id);
 
-            // OPTIMIZATION: Check which IDs are actually NEW (not in DB)
+            // OPTIMIZATION: Check for NEW or JUST COMPLETED reconciliations
             if (recIds.length > 0) {
                 const placeholders = recIds.map((_, i) => `$${i + 1}`).join(',');
-                const existRes = await client.query(`SELECT id FROM reconciliations WHERE id IN (${placeholders})`, recIds);
-                const existingIds = new Set(existRes.rows.map(row => row.id));
+                // Get existing status to compare
+                const existRes = await client.query(`SELECT id, status FROM reconciliations WHERE id IN (${placeholders})`, recIds);
+                const existingMap = new Map();
+                existRes.rows.forEach(row => existingMap.set(row.id, row.status));
 
                 trulyNewReconciliations = data.reconciliations.filter(r =>
-                    r.status === 'completed' && !existingIds.has(r.id)
+                    r.status === 'completed' &&
+                    // Notify if: It's new OR it wasn't completed before matches
+                    (!existingMap.has(r.id) || existingMap.get(r.id) !== 'completed')
                 );
             }
 
@@ -187,6 +191,7 @@ app.post('/api/sync/push', async (req, res) => {
                     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                     ON CONFLICT (id) DO UPDATE SET 
                     status = EXCLUDED.status,
+                    reconciliation_number = EXCLUDED.reconciliation_number,
                     system_sales = EXCLUDED.system_sales,
                     total_receipts = EXCLUDED.total_receipts,
                     surplus_deficit = EXCLUDED.surplus_deficit,
