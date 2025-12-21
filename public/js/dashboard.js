@@ -32,6 +32,30 @@ const api = {
     }
 };
 
+// Initialize OneSignal
+async function initOneSignal() {
+    try {
+        const res = await fetch('/api/config');
+        const config = await res.json();
+
+        if (config.oneSignalAppId) {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function (OneSignal) {
+                await OneSignal.init({
+                    appId: config.oneSignalAppId,
+                    allowLocalhostAsSecureOrigin: true, // For testing
+                });
+
+                // Prompt specifically for dashboard users
+                OneSignal.Slidedown.promptPush();
+            });
+            console.log('🔔 OneSignal Initialized');
+        }
+    } catch (e) {
+        console.error('Failed to init OneSignal:', e);
+    }
+}
+
 const filters = {
     apply: () => {
         loadReports();

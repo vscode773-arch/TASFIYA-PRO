@@ -3,9 +3,38 @@ const cors = require('cors');
 const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
+const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// OneSignal Config
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID;
+const ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY;
+
+async function sendNotification(title, message) {
+    if (!ONESIGNAL_APP_ID || !ONESIGNAL_API_KEY) {
+        console.warn('⚠️ OneSignal credentials not found');
+        return;
+    }
+
+    try {
+        await axios.post('https://onesignal.com/api/v1/notifications', {
+            app_id: ONESIGNAL_APP_ID,
+            headings: { en: title, ar: title },
+            contents: { en: message, ar: message },
+            included_segments: ['All'], // Send to all subscribed users (Admins)
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${ONESIGNAL_API_KEY}`
+            }
+        });
+        console.log('🔔 Notification sent:', title);
+    } catch (error) {
+        console.error('❌ Notification failed:', error.response?.data || error.message);
+    }
+}
 
 // Database Connection
 const pool = new Pool({
@@ -22,9 +51,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Simple In-Memory Session Store (Use Redis/DB in production for persistence)
 const sessions = new Map();
 
-// --- Auth Middleware ---
+// Public Config Endpoint
+app.get('/api/config', (req, res) => {
+    res.json({
+        oneSignalAppId: process.env.ONESIGNAL_APP_ID
+    });
+});
+
+// Authentication Middleware ---
 const authMiddleware = (req, res, next) => {
-    const publicPaths = ['/login', '/api/login', '/', '/api/sync/push'];
+    const publicPaths = ['/login', '/api/login', '/', '/api/sync/push', '/api/config'];
     if (publicPaths.includes(req.path) || req.path.startsWith('/css') || req.path.startsWith('/js')) {
         return next();
     }
@@ -177,6 +213,25 @@ app.post('/api/sync/push', async (req, res) => {
                 await client.query(`DELETE FROM bank_receipts WHERE id NOT IN (${placeholders})`, brIds);
             } else {
                 await client.query('DELETE FROM bank_receipts');
+            }
+        }
+
+        // 6. Send Notifications
+        if (data.reconciliations && data.reconciliations.length > 0) {
+            // Find completed reconciliations in this batch
+            const newRecs = data.reconciliations.filter(r => r.status === 'completed');
+
+            if (newRecs.length > 0) {
+                // We should ideally check if they are NEW (not just updated), but for now notifying on sync is okay
+                // To avoid spam, we can just check the first one or send a generic message
+                const count = newRecs.length;
+                const lastRec = newRecs[0];
+                const msg = count === 1
+                    ? `تصفية جديدة #${lastRec.reconciliation_number} من ${lastRec.cashier_name}`
+                    : `تم مزامنة ${count} تصفيات جديدة`;
+
+                // Don't await, send in background
+                sendNotification('تصفية جديدة 💰', msg).catch(console.error);
             }
         }
 
