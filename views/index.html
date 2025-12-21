@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +8,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
     <div class="auth-container">
         <div class="login-card fade-in">
             <div style="text-align: center; margin-bottom: 2rem;">
-                <h1 style="background: linear-gradient(to right, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">تصفية برو</h1>
+                <h1
+                    style="background: linear-gradient(to right, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    تصفية برو</h1>
                 <p style="color: var(--text-secondary);">لوحة التحكم عبر الويب</p>
             </div>
-            
+
             <form id="loginForm">
                 <div class="form-group">
                     <label>اسم المستخدم</label>
@@ -26,6 +30,15 @@
                 </div>
                 <button type="submit" class="btn">دخول</button>
             </form>
+
+            <div
+                style="margin-top: 2rem; text-align: center; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.6; padding-top: 1rem; border-top: 1px solid var(--border);">
+                جميع حقوق التطوير محفوظة © ٢٠٢٥
+                <br>
+                برمجة وتطوير: <span style="color: var(--primary);">محمد أمين الكامل</span>
+                <br>
+                يمنع منعاً باتاً النسخ أو التعديل دون إذن كتابي
+            </div>
         </div>
     </div>
 
@@ -35,7 +48,7 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const btn = e.target.querySelector('button');
-            
+
             btn.textContent = 'جاري التحقق...';
             btn.disabled = true;
 
@@ -45,9 +58,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const data = await res.json();
-                
+
                 if (data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
@@ -65,4 +78,5 @@
         });
     </script>
 </body>
+
 </html>
