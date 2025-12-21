@@ -35,24 +35,38 @@ const api = {
 // Initialize OneSignal
 async function initOneSignal() {
     try {
+        console.log('🔔 Initializing OneSignal...');
         const res = await fetch('/api/config');
+        if (!res.ok) throw new Error(`Config fetch failed: ${res.status}`);
+
         const config = await res.json();
+        console.log('🔔 Config loaded, App ID:', config.oneSignalAppId);
 
         if (config.oneSignalAppId) {
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function (OneSignal) {
+                console.log('🔔 OneSignal SDK Callback Started');
                 await OneSignal.init({
                     appId: config.oneSignalAppId,
-                    allowLocalhostAsSecureOrigin: true, // For testing
+                    allowLocalhostAsSecureOrigin: true,
+                    notifyButton: {
+                        enable: true, // Enable the bell button
+                    },
                 });
+                console.log('🔔 OneSignal Init Completed');
 
-                // Prompt specifically for dashboard users
-                OneSignal.Slidedown.promptPush();
+                // Check Permission
+                console.log('🔔 Permission State:', Notification.permission);
+                if (Notification.permission === 'default') {
+                    console.log('🔔 Prompting for permission...');
+                    OneSignal.Slidedown.promptPush();
+                }
             });
-            console.log('🔔 OneSignal Initialized');
+        } else {
+            console.warn('⚠️ OneSignal App ID missing in config');
         }
     } catch (e) {
-        console.error('Failed to init OneSignal:', e);
+        console.error('❌ Failed to init OneSignal:', e);
     }
 }
 
