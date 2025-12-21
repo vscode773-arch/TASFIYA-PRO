@@ -232,3 +232,166 @@ tr:hover {
 .form-select:focus {
     border-color: var(--accent);
 }
+
+/* ========================================
+   RESPONSIVE DESIGN - MOBILE & TABLET
+   ======================================== */
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .navbar {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .nav-brand {
+        font-size: 1.25rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px;
+        font-size: 0.85rem;
+    }
+
+    th,
+    td {
+        padding: 0.5rem;
+    }
+
+    .login-card {
+        padding: 2rem 1.5rem;
+        max-width: 90%;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Mobile Phones (480px and below) */
+@media (max-width: 480px) {
+    .container {
+        padding: 0.75rem;
+    }
+
+    .navbar {
+        padding: 0.75rem;
+    }
+
+    .nav-brand {
+        font-size: 1.1rem;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    input,
+    select,
+    .form-select {
+        font-size: 0.9rem;
+        padding: 0.65rem;
+    }
+
+    table {
+        font-size: 0.75rem;
+    }
+
+    th,
+    td {
+        padding: 0.4rem;
+    }
+
+    .login-card {
+        padding: 1.5rem 1rem;
+        max-width: 95%;
+    }
+
+    .login-card h1 {
+        font-size: 1.5rem;
+    }
+
+    /* Stack filter inputs vertically on very small screens */
+    .stat-card>div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+
+    /* Modal adjustments for mobile */
+    #detailsModal {
+        padding: 1rem;
+    }
+
+    #detailsModal .login-card {
+        max-width: 100%;
+    }
+}
+
+/* Extra small phones (360px and below) */
+@media (max-width: 360px) {
+    .navbar {
+        padding: 0.5rem;
+    }
+
+    .container {
+        padding: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    table {
+        min-width: 500px;
+    }
+
+    .btn {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Landscape mode for mobile devices */
+@media (max-width: 768px) and (orientation: landscape) {
+    .navbar {
+        flex-direction: row;
+        padding: 0.75rem 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
