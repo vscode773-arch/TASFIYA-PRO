@@ -259,5 +259,6 @@ function closeModal() {
 
 // Init
 loadStats();
-loadMetadata(); // New call
+loadMetadata();
 loadReports();
+initOneSignal(); // Notifications
