@@ -321,7 +321,12 @@ const initDB = async () => {
     }
 };
 
-app.listen(port, async () => {
-    await initDB();
+// Start server first to satisfy Render's health check
+app.listen(port, () => {
     console.log(`Cloud Server running on port ${port}`);
+});
+
+// Initialize database in background
+initDB().catch(err => {
+    console.error('Failed to initialize database:', err);
 });
