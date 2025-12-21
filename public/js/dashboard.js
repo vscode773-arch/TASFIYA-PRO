@@ -37,10 +37,7 @@ const api = {
 async function initOneSignal() {
     try {
         const res = await fetch('/api/config');
-        if (!res.ok) {
-            alert('Debug: Failed to fetch config');
-            return;
-        }
+        if (!res.ok) return;
 
         const config = await res.json();
 
@@ -58,14 +55,12 @@ async function initOneSignal() {
                         OneSignal.Slidedown.promptPush();
                     }
                 } catch (err) {
-                    alert('Debug: OneSignal Init Error: ' + err.message);
+                    console.warn('OneSignal Init Error:', err);
                 }
             });
-        } else {
-            alert('Debug: OneSignal App ID is MISSING from server config! Please check Render Environment Variables.');
         }
     } catch (e) {
-        alert('Debug: General Error: ' + e.message);
+        console.warn('OneSignal Setup Error:', e);
     }
 }
 
