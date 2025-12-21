@@ -293,25 +293,31 @@ tr:hover {
 
     /* Force mobile modal style for all tablets and phones */
     #detailsModal {
-        padding: 0;
-        align-items: flex-end;
-        /* Align to bottom for sheet effect */
+        padding: 1rem;
+        /* Space around the modal */
+        align-items: center;
+        /* Center vertically */
+        justify-content: center;
+        /* Center horizontally */
     }
 
     #detailsModal .login-card {
         width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        border-radius: 1.5rem 1.5rem 0 0;
-        /* Rounded top only */
-        max-height: 85vh;
+        max-width: 380px !important;
+        /* Limit width like iPhone size */
+        min-width: 300px !important;
+        border-radius: 1rem !important;
+        /* Full rounded corners */
+        max-height: 70vh;
+        /* Limit height */
         height: auto;
-        margin: 0;
+        margin: auto;
         overflow-y: auto;
-        padding-bottom: 2rem;
+        padding-bottom: 1rem;
         /* Fix for RTL */
         direction: rtl;
         text-align: right;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
     .detail-grid {
