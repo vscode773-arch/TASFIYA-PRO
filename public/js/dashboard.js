@@ -120,14 +120,18 @@ async function loadReports() {
 
         reports.forEach(r => {
             const tr = document.createElement('tr');
+            const surplusDeficitClass = r.surplus_deficit >= 0 ? 'var(--success)' : 'var(--danger)';
+            const surplusDeficitText = formatCurrency(r.surplus_deficit);
+
             tr.innerHTML = `
                 <td>${r.reconciliation_number ? '#' + r.reconciliation_number : '-'}</td>
                 <td>${formatDate(r.reconciliation_date)}</td>
                 <td>${r.cashier_name || '-'}</td>
-                <td>${r.accountant_name || '-'}</td>
-                <td style="color: var(--success); font-weight: bold;">${formatCurrency(r.total_receipts)}</td>
-                <td>${formatCurrency(r.system_sales)}</td>
-                <td><span class="badge ${r.status === 'completed' ? 'badge-success' : 'badge-warning'}">${r.status === 'completed' ? 'مكتملة' : 'مسودة'}</span></td>
+                <td class="hide-mobile">${r.accountant_name || '-'}</td>
+                <td class="hide-mobile" style="color: var(--success); font-weight: bold;">${formatCurrency(r.total_receipts)}</td>
+                <td class="hide-mobile">${formatCurrency(r.system_sales)}</td>
+                <td class="hide-mobile"><span class="badge ${r.status === 'completed' ? 'badge-success' : 'badge-warning'}">${r.status === 'completed' ? 'مكتملة' : 'مسودة'}</span></td>
+                <td style="color: ${surplusDeficitClass}; font-weight: bold; direction: ltr;">${surplusDeficitText}</td>
                 <td class="text-end">
                     <button onclick="viewDetails(${r.id})" class="btn" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem;">عرض</button>
                 </td>

@@ -239,6 +239,10 @@ tr:hover {
 
 /* Tablets (768px and below) */
 @media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+
     .container {
         padding: 1rem;
     }
