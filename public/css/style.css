@@ -352,11 +352,42 @@ tr:hover {
 
     /* Modal adjustments for mobile */
     #detailsModal {
-        padding: 1rem;
+        padding: 0.5rem;
+        align-items: flex-end;
+        /* Show at bottom on mobile */
     }
 
     #detailsModal .login-card {
         max-width: 100%;
+        border-radius: 1rem 1rem 0 0;
+        /* Rounded top only */
+        max-height: 90vh;
+        overflow-y: auto;
+        margin-bottom: 0;
+        animation: slideUp 0.3s ease-out;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .receipt-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
 }
 

@@ -152,8 +152,49 @@ app.post('/api/sync/push', async (req, res) => {
                 const placeholders = recIds.map((_, i) => `$${i + 1}`).join(',');
                 await client.query(`DELETE FROM reconciliations WHERE id NOT IN (${placeholders})`, recIds);
             } else {
-                // If no reconciliations sent, delete all
                 await client.query('DELETE FROM reconciliations');
+            }
+        }
+
+        // 5. Sync Bank Receipts
+        if (data.bankReceipts) {
+            const brIds = data.bankReceipts.map(br => br.id);
+            for (const br of data.bankReceipts) {
+                await client.query(`
+                    INSERT INTO bank_receipts (id, reconciliation_id, bank_name, amount)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (id) DO UPDATE SET 
+                    reconciliation_id = EXCLUDED.reconciliation_id,
+                    bank_name = EXCLUDED.bank_name,
+                    amount = EXCLUDED.amount
+                `, [br.id, br.reconciliation_id, br.bank_name, br.amount]);
+            }
+            if (brIds.length > 0) {
+                const placeholders = brIds.map((_, i) => `$${i + 1}`).join(',');
+                await client.query(`DELETE FROM bank_receipts WHERE id NOT IN (${placeholders})`, brIds);
+            } else {
+                await client.query('DELETE FROM bank_receipts');
+            }
+        }
+
+        // 6. Sync Cash Receipts
+        if (data.cashReceipts) {
+            const crIds = data.cashReceipts.map(cr => cr.id);
+            for (const cr of data.cashReceipts) {
+                await client.query(`
+                    INSERT INTO cash_receipts (id, reconciliation_id, amount, notes)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (id) DO UPDATE SET 
+                    reconciliation_id = EXCLUDED.reconciliation_id,
+                    amount = EXCLUDED.amount,
+                    notes = EXCLUDED.notes
+                `, [cr.id, cr.reconciliation_id, cr.amount, cr.notes]);
+            }
+            if (crIds.length > 0) {
+                const placeholders = crIds.map((_, i) => `$${i + 1}`).join(',');
+                await client.query(`DELETE FROM cash_receipts WHERE id NOT IN (${placeholders})`, crIds);
+            } else {
+                await client.query('DELETE FROM cash_receipts');
             }
         }
 
@@ -309,12 +350,14 @@ app.get('/api/reports/:id', async (req, res) => {
 
         const reconciliation = recResult.rows[0];
 
-        // Note: Bank receipts and cash receipts tables don't exist in cloud DB
-        // Return basic reconciliation data only
+        // Fetch receipts
+        const bankReceipts = await pool.query('SELECT * FROM bank_receipts WHERE reconciliation_id = $1', [id]);
+        const cashReceipts = await pool.query('SELECT * FROM cash_receipts WHERE reconciliation_id = $1', [id]);
+
         res.json({
             ...reconciliation,
-            bankReceipts: [],
-            cashReceipts: []
+            bankReceipts: bankReceipts.rows,
+            cashReceipts: cashReceipts.rows
         });
     } catch (err) {
         console.error(err);
@@ -361,6 +404,18 @@ const initDB = async () => {
                 total_receipts DECIMAL(15,2),
                 surplus_deficit DECIMAL(15,2),
                 status TEXT,
+                notes TEXT
+            );
+            CREATE TABLE IF NOT EXISTS bank_receipts (
+                id INTEGER PRIMARY KEY,
+                reconciliation_id INTEGER,
+                bank_name TEXT,
+                amount DECIMAL(15,2)
+            );
+             CREATE TABLE IF NOT EXISTS cash_receipts (
+                id INTEGER PRIMARY KEY,
+                reconciliation_id INTEGER,
+                amount DECIMAL(15,2),
                 notes TEXT
             );
         `);
