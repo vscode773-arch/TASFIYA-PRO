@@ -127,6 +127,7 @@ app.post('/api/sync/push', async (req, res) => {
 
         // 4. Sync Reconciliations
         if (data.reconciliations) {
+            const recIds = data.reconciliations.map(r => r.id);
             for (const r of data.reconciliations) {
                 await client.query(`
                     INSERT INTO reconciliations (
@@ -138,12 +139,21 @@ app.post('/api/sync/push', async (req, res) => {
                     status = EXCLUDED.status,
                     system_sales = EXCLUDED.system_sales,
                     total_receipts = EXCLUDED.total_receipts,
-                    surplus_deficit = EXCLUDED.surplus_deficit
+                    surplus_deficit = EXCLUDED.surplus_deficit,
+                    notes = EXCLUDED.notes
                 `, [
                     r.id, r.reconciliation_number, r.cashier_id, r.accountant_id,
                     r.reconciliation_date, r.system_sales, r.total_receipts,
                     r.surplus_deficit, r.status, r.notes
                 ]);
+            }
+            // DELETE reconciliations that were deleted locally
+            if (recIds.length > 0) {
+                const placeholders = recIds.map((_, i) => `$${i + 1}`).join(',');
+                await client.query(`DELETE FROM reconciliations WHERE id NOT IN (${placeholders})`, recIds);
+            } else {
+                // If no reconciliations sent, delete all
+                await client.query('DELETE FROM reconciliations');
             }
         }
 
