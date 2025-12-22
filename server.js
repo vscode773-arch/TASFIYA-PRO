@@ -239,8 +239,20 @@ app.post('/api/sync/push', async (req, res) => {
         if (trulyNewReconciliations && trulyNewReconciliations.length > 0) {
             const count = trulyNewReconciliations.length;
             const lastRec = trulyNewReconciliations[0];
+
+            // Get cashier name from database
+            let cashierName = 'الكاشير';
+            try {
+                const cashierRes = await client.query('SELECT name FROM cashiers WHERE id = $1', [lastRec.cashier_id]);
+                if (cashierRes.rows.length > 0) {
+                    cashierName = cashierRes.rows[0].name;
+                }
+            } catch (e) {
+                console.error('Error getting cashier name:', e);
+            }
+
             const msg = count === 1
-                ? `تصفية جديدة #${lastRec.reconciliation_number} من ${lastRec.cashier_name}`
+                ? `تصفية جديدة #${lastRec.reconciliation_number} من ${cashierName}`
                 : `تم إضافة ${count} تصفيات جديدة`;
 
             // Fire and forget notification
