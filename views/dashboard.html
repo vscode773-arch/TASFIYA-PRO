@@ -69,7 +69,11 @@
                         <option value="draft">مسودة</option>
                     </select>
                 </div>
-                <button onclick="filters.apply()" class="btn">بحث</button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="filters.apply()" class="btn" style="flex: 2;">بحث</button>
+                    <button id="refreshBtn" onclick="filters.refresh()" class="btn"
+                        style="flex: 1; background-color: #4a5568;" title="تحديث البيانات">↻</button>
+                </div>
             </div>
         </div>
 

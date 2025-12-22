@@ -68,6 +68,17 @@ const filters = {
     apply: () => {
         loadReports();
         loadStats();
+    },
+    refresh: () => {
+        loadReports();
+        loadStats();
+        // Optional: Show feedback
+        const btn = document.getElementById('refreshBtn');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '...';
+            setTimeout(() => btn.innerHTML = originalText, 500);
+        }
     }
 };
 
