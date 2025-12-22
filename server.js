@@ -383,7 +383,7 @@ app.get('/api/reports', async (req, res) => {
             params.push(req.query.cashierId);
         }
 
-        sql += ' ORDER BY r.reconciliation_date DESC, r.id DESC LIMIT 100';
+        sql += ' ORDER BY r.reconciliation_number DESC LIMIT 100';
 
         const result = await pool.query(sql, params);
         res.json(result.rows);
