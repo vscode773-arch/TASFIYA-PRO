@@ -488,6 +488,9 @@ const initDB = async () => {
                 amount DECIMAL(15,2),
                 notes TEXT
             );
+            
+            -- Create index for faster sorting by reconciliation_number
+            CREATE INDEX IF NOT EXISTS idx_reconciliation_number ON reconciliations(reconciliation_number DESC);
         `);
         client.release();
         console.log('Database initialized');
