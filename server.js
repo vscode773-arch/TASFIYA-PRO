@@ -125,6 +125,20 @@ app.post('/api/sync/push', async (req, res) => {
     try {
         await client.query('BEGIN');
 
+        // 0. Sync Admins (Users)
+        if (data.admins) {
+            for (const admin of data.admins) {
+                // We sync by username as unique key, updating password and name
+                await client.query(`
+                    INSERT INTO admins (username, password, name)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (username) DO UPDATE SET 
+                    password = EXCLUDED.password,
+                    name = EXCLUDED.name
+                `, [admin.username, admin.password, admin.name || admin.username]);
+            }
+        }
+
         // 1. Sync Cashiers
         if (data.cashiers) {
             for (const c of data.cashiers) {
