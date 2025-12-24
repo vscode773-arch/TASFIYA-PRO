@@ -15,11 +15,11 @@ function logout() {
 }
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(amount);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(amount);
 };
 
 const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('ar-SA');
+    return new Date(dateStr).toLocaleDateString('en-GB');
 };
 
 const api = {
