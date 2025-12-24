@@ -206,6 +206,9 @@ app.post('/api/sync/push', async (req, res) => {
                     ON CONFLICT (id) DO UPDATE SET 
                     status = EXCLUDED.status,
                     reconciliation_number = EXCLUDED.reconciliation_number,
+                    cashier_id = EXCLUDED.cashier_id,
+                    accountant_id = EXCLUDED.accountant_id,
+                    reconciliation_date = EXCLUDED.reconciliation_date,
                     system_sales = EXCLUDED.system_sales,
                     total_receipts = EXCLUDED.total_receipts,
                     surplus_deficit = EXCLUDED.surplus_deficit,
