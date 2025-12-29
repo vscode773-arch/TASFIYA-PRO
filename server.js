@@ -278,8 +278,10 @@ app.post('/api/sync/push', async (req, res) => {
 
         // 6. Sync Cash Receipts
         if (data.cashReceipts) {
+            console.log('Syncing Cash Receipts:', JSON.stringify(data.cashReceipts.slice(0, 3))); // Log first 3 items
             const crIds = data.cashReceipts.map(cr => cr.id);
             for (const cr of data.cashReceipts) {
+                const amount = parseFloat(cr.amount || 0);
                 await client.query(`
                     INSERT INTO cash_receipts (id, reconciliation_id, amount, notes)
                     VALUES ($1, $2, $3, $4)
@@ -287,7 +289,7 @@ app.post('/api/sync/push', async (req, res) => {
                     reconciliation_id = EXCLUDED.reconciliation_id,
                     amount = EXCLUDED.amount,
                     notes = EXCLUDED.notes
-                `, [cr.id, cr.reconciliation_id, cr.amount, cr.notes]);
+                `, [cr.id, cr.reconciliation_id, amount, cr.notes]);
             }
             if (crIds.length > 0) {
                 const placeholders = crIds.map((_, i) => `$${i + 1}`).join(',');
