@@ -32,17 +32,50 @@
                 <div class="stat-label">إجمالي التصفيات</div>
                 <div class="stat-value" id="totalReconciliations">-</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-label">إجمالي المقبوضات</div>
-                <div class="stat-value" style="color: var(--success);" id="totalReceipts">-</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div class="stat-label" style="margin-bottom: 0;">إجمالي المقبوضات</div>
+                    <button onclick="toggleStat('totalReceipts', this)"
+                        style="background:none; border:none; cursor:pointer; color: var(--text-secondary); padding:0; display: flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="stat-value" style="color: var(--success);" id="totalReceipts" data-val="-">-</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-label">إجمالي المبيعات</div>
-                <div class="stat-value" id="totalSales">-</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div class="stat-label" style="margin-bottom: 0;">إجمالي المبيعات</div>
+                    <button onclick="toggleStat('totalSales', this)"
+                        style="background:none; border:none; cursor:pointer; color: var(--text-secondary); padding:0; display: flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="stat-value" id="totalSales" data-val="-">-</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-label">إجمالي النقدية</div>
-                <div class="stat-value" style="color: var(--warning);" id="totalCash">-</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div class="stat-label" style="margin-bottom: 0;">إجمالي النقدية</div>
+                    <button onclick="toggleStat('totalCash', this)"
+                        style="background:none; border:none; cursor:pointer; color: var(--text-secondary); padding:0; display: flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="stat-value" style="color: var(--warning);" id="totalCash" data-val="-">-</div>
             </div>
         </div>
 

@@ -126,11 +126,47 @@ async function loadStats() {
 
         const stats = await api.get(url);
         document.getElementById('totalReconciliations').textContent = stats.totalReconciliations;
-        document.getElementById('totalReceipts').textContent = formatCurrency(stats.totalReceipts);
-        document.getElementById('totalSales').textContent = formatCurrency(stats.totalSales);
-        document.getElementById('totalCash').textContent = formatCurrency(stats.totalCash);
+
+        updateStat('totalReceipts', stats.totalReceipts);
+        updateStat('totalSales', stats.totalSales);
+        updateStat('totalCash', stats.totalCash);
+
     } catch (err) {
         console.error(err);
+    }
+}
+
+function updateStat(id, rawValue) {
+    const el = document.getElementById(id);
+    const formatted = formatCurrency(rawValue);
+    el.setAttribute('data-val', formatted); // Update hidden value
+
+    // Only update text if NOT hidden (blur-text class not present)
+    // Actually, checking blur-text might be tricky if it's the first load. 
+    // Let's assume on load we show, or respect current state.
+    if (!el.classList.contains('blur-text')) {
+        el.textContent = formatted;
+    }
+}
+
+function toggleStat(id, btn) {
+    const el = document.getElementById(id);
+    const isHidden = el.classList.contains('blur-text');
+
+    if (isHidden) {
+        // Show
+        el.classList.remove('blur-text');
+        el.textContent = el.getAttribute('data-val');
+        el.style.filter = 'none';
+        // Eye Icon
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    } else {
+        // Hide
+        el.classList.add('blur-text');
+        el.textContent = '•••••••';
+        el.style.filter = 'blur(4px)'; // Optional: add real blur effect
+        // Eye Off Icon
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M1 1l22 22"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><circle cx="12" cy="12" r="3"/></svg>`;
     }
 }
 
