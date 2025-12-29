@@ -198,6 +198,18 @@ async function viewDetails(id) {
     try {
         const data = await api.get(`/api/reports/${id}`);
 
+        let cashHtml = '';
+        if (data.cashReceipts && data.cashReceipts.length > 0) {
+            data.cashReceipts.forEach(c => {
+                cashHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--border);">
+                        <span>${c.notes || 'نقدية'}</span>
+                        <span>${formatCurrency(c.amount)}</span>
+                    </div>
+                `;
+            });
+        }
+
         let bankHtml = '';
         if (data.bankReceipts && data.bankReceipts.length > 0) {
             data.bankReceipts.forEach(b => {
@@ -237,14 +249,6 @@ async function viewDetails(id) {
                     <span style="font-weight: bold;">${formatCurrency(data.system_sales)}</span>
                 </div>
                 
-                <!-- Total Cash Calculation -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary);">
-                    <span>إجمالي النقدية:</span>
-                    <span style="font-weight: bold;">
-                        ${formatCurrency(data.cashReceipts ? data.cashReceipts.reduce((sum, item) => sum + Number(item.amount), 0) : 0)}
-                    </span>
-                </div>
-
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span>إجمالي المقبوضات:</span>
                     <span style="font-weight: bold; color: var(--success);">${formatCurrency(data.total_receipts)}</span>
@@ -255,6 +259,11 @@ async function viewDetails(id) {
                         ${formatCurrency(data.surplus_deficit)}
                     </span>
                 </div>
+            </div>
+
+            <h3 style="margin-top: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">المقبوضات النقدية</h3>
+            <div style="background: var(--bg-primary); border-radius: 0.5rem; margin-top: 0.5rem;">
+                ${cashHtml || '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">لا توجد مقبوضات نقدية</div>'}
             </div>
 
             <h3 style="margin-top: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">المقبوضات البنكية</h3>
