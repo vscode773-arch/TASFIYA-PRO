@@ -199,8 +199,10 @@ async function viewDetails(id) {
         const data = await api.get(`/api/reports/${id}`);
 
         let cashHtml = '';
+        let totalCash = 0;
         if (data.cashReceipts && data.cashReceipts.length > 0) {
             data.cashReceipts.forEach(c => {
+                totalCash += Number(c.amount);
                 cashHtml += `
                     <div style="display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid var(--border);">
                         <span>${c.notes || 'نقدية'}</span>
@@ -208,6 +210,13 @@ async function viewDetails(id) {
                     </div>
                 `;
             });
+            // Append Total Row
+            cashHtml += `
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem 0.5rem; background: rgba(0,0,0,0.02); font-weight: bold;">
+                    <span>إجمالي النقدية</span>
+                    <span style="color: var(--success);">${formatCurrency(totalCash)}</span>
+                </div>
+            `;
         }
 
         let bankHtml = '';
