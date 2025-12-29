@@ -136,14 +136,18 @@ input:focus {
 }
 
 .stat-value {
-    font-size: clamp(1.25rem, 2vw, 1.75rem); /* Responsive font size */
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
+    /* Slightly smaller to fit */
     font-weight: 700;
     margin-top: 0.5rem;
-    white-space: nowrap;      /* Keep on one line */
-    overflow: hidden;         /* Hide overflow */
-    text-overflow: ellipsis;  /* Add dots if too long */
-    direction: ltr;           /* Ensure numbers display correctly properly */
-    text-align: right;        /* Align properly in card */
+    white-space: normal;
+    /* Allow wrapping */
+    word-break: break-word;
+    /* Break words if necessary */
+    line-height: 1.2;
+    /* Tighter line height for wrapped text */
+    direction: ltr;
+    text-align: right;
 }
 
 .stat-label {
