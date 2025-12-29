@@ -373,10 +373,52 @@ app.get('/api/stats', async (req, res) => {
         const receiptsRes = await pool.query(`SELECT SUM(total_receipts) as sum FROM reconciliations ${whereClause}`, params);
         const salesRes = await pool.query(`SELECT SUM(system_sales) as sum FROM reconciliations ${whereClause}`, params);
 
+        // Calculate Total Cash (Linked to filtered reconciliations)
+        // We need to join because filters apply to reconciliation properties (date, branch, cashier)
+        let cashQuery = `
+            SELECT SUM(cr.amount) as sum 
+            FROM cash_receipts cr
+            JOIN reconciliations r ON cr.reconciliation_id = r.id
+        `;
+
+        // If we have branch filter, we need to join cashiers too (assuming branch is on cashier)
+        // Actually, let's reuse the whereClause logic but applied to joined tables
+        // The whereClause currently looks like "WHERE 1=1 AND status = $1 ..."
+        // We can adapt it by prefixing column names if needed, or simply use the same logic if column names are unique enough or fully qualified in the main query.
+        // However, 'status', 'reconciliation_date' are in reconciliations. 'cashier_id' is in reconciliations.
+        // So we can just append the same WHERE clause, but we must ensure column ambiguity is resolved if strict mode is on.
+
+        // A safer way is to rebuild the where clause for the specific join or just use the same parameters 
+        // effectively filtering the reconciliations first.
+
+        let cashWhereClause = 'WHERE 1=1';
+        // We need to re-construct where clause with 'r.' prefix for safety
+        if (req.query.dateFrom) cashWhereClause += ` AND DATE(r.reconciliation_date) >= $1`;
+        if (req.query.dateTo) cashWhereClause += ` AND DATE(r.reconciliation_date) <= $2`;
+        // For branch, we need another join
+        if (req.query.branchId) cashWhereClause += ` AND r.cashier_id IN (SELECT id FROM cashiers WHERE branch_id = $3)`;
+        if (req.query.cashierId) cashWhereClause += ` AND r.cashier_id = $4`;
+        if (req.query.status) cashWhereClause += ` AND r.status = $5`;
+
+        // Note: The params array has values in specific order. We use the same params array.
+        // But wait, the $ indices must match the params order.
+        // Since we are running a separate query, we need to make sure the $ indices are correct relative to THIS query.
+        // The simplest way is to reuse the 'whereClause' string but we need to rely on 'reconciliations' table being implicitly or explicitly accessible.
+
+        // Let's rewrite the cash query fully:
+        cashQuery += ` ${whereClause.replace(/reconciliation_date/g, 'r.reconciliation_date')
+            .replace(/cashier_id/g, 'r.cashier_id')
+            .replace(/status/g, 'r.status')}`;
+
+        // The subquery for branch in whereClause: `... cashier_id IN ...` works fine as is.
+
+        const cashRes = await pool.query(cashQuery, params);
+
         res.json({
             totalReconciliations: countRes.rows[0].count,
             totalReceipts: receiptsRes.rows[0].sum || 0,
-            totalSales: salesRes.rows[0].sum || 0
+            totalSales: salesRes.rows[0].sum || 0,
+            totalCash: cashRes.rows[0].sum || 0
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

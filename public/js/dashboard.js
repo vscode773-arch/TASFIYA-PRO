@@ -128,6 +128,7 @@ async function loadStats() {
         document.getElementById('totalReconciliations').textContent = stats.totalReconciliations;
         document.getElementById('totalReceipts').textContent = formatCurrency(stats.totalReceipts);
         document.getElementById('totalSales').textContent = formatCurrency(stats.totalSales);
+        document.getElementById('totalCash').textContent = formatCurrency(stats.totalCash);
     } catch (err) {
         console.error(err);
     }
