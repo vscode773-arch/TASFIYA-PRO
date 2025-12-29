@@ -236,6 +236,15 @@ async function viewDetails(id) {
                     <span>مبيعات النظام:</span>
                     <span style="font-weight: bold;">${formatCurrency(data.system_sales)}</span>
                 </div>
+                
+                <!-- Total Cash Calculation -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary);">
+                    <span>إجمالي النقدية:</span>
+                    <span style="font-weight: bold;">
+                        ${formatCurrency(data.cashReceipts ? data.cashReceipts.reduce((sum, item) => sum + Number(item.amount), 0) : 0)}
+                    </span>
+                </div>
+
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span>إجمالي المقبوضات:</span>
                     <span style="font-weight: bold; color: var(--success);">${formatCurrency(data.total_receipts)}</span>
