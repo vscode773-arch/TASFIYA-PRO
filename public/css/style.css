@@ -136,9 +136,14 @@ input:focus {
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: clamp(1.25rem, 2vw, 1.75rem); /* Responsive font size */
     font-weight: 700;
     margin-top: 0.5rem;
+    white-space: nowrap;      /* Keep on one line */
+    overflow: hidden;         /* Hide overflow */
+    text-overflow: ellipsis;  /* Add dots if too long */
+    direction: ltr;           /* Ensure numbers display correctly properly */
+    text-align: right;        /* Align properly in card */
 }
 
 .stat-label {
