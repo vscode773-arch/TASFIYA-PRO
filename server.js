@@ -220,15 +220,13 @@ app.post('/api/sync/push', async (req, res) => {
                 ]);
             }
             // DELETE reconciliations that were deleted locally
-            // DELETE reconciliations logic REMOVED to allow partial sync
-            /*
+            // DELETE reconciliations that were deleted locally (OPTIMIZED for large datasets)
             if (recIds.length > 0) {
-                const placeholders = recIds.map((_, i) => `$${i + 1}`).join(',');
-                await client.query(`DELETE FROM reconciliations WHERE id NOT IN (${placeholders})`, recIds);
+                // Use ANY($1) for efficient array handling instead of thousands of placeholders
+                await client.query('DELETE FROM reconciliations WHERE NOT (id = ANY($1))', [recIds]);
             } else {
                 await client.query('DELETE FROM reconciliations');
             }
-            */
         }
 
         // 5. Sync Bank Receipts
@@ -247,15 +245,12 @@ app.post('/api/sync/push', async (req, res) => {
                     amount = EXCLUDED.amount
                 `, [br.id, br.reconciliation_id, opType, br.amount]);
             }
-            // DELETE bank_receipts logic REMOVED to allow partial sync
-            /*
+            // DELETE bank_receipts (OPTIMIZED)
             if (brIds.length > 0) {
-                const placeholders = brIds.map((_, i) => `$${i + 1}`).join(',');
-                await client.query(`DELETE FROM bank_receipts WHERE id NOT IN (${placeholders})`, brIds);
+                await client.query('DELETE FROM bank_receipts WHERE NOT (id = ANY($1))', [brIds]);
             } else {
                 await client.query('DELETE FROM bank_receipts');
             }
-            */
         }
 
         // 6. Send Notifications (ONLY for truly new items)
@@ -306,15 +301,12 @@ app.post('/api/sync/push', async (req, res) => {
                     notes = EXCLUDED.notes
                 `, [cr.id, cr.reconciliation_id, amount, note]);
             }
-            // DELETE cash_receipts logic REMOVED to allow partial sync
-            /*
+            // DELETE cash_receipts (OPTIMIZED)
             if (crIds.length > 0) {
-                const placeholders = crIds.map((_, i) => `$${i + 1}`).join(',');
-                await client.query(`DELETE FROM cash_receipts WHERE id NOT IN (${placeholders})`, crIds);
+                await client.query('DELETE FROM cash_receipts WHERE NOT (id = ANY($1))', [crIds]);
             } else {
                 await client.query('DELETE FROM cash_receipts');
             }
-            */
         }
 
         // 5. Sync Admin (Optional, to ensure login works)
