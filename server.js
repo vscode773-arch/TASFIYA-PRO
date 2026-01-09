@@ -207,20 +207,31 @@ app.post('/api/sync/push', async (req, res) => {
             await client.query('COMMIT');
             await client.query('BEGIN'); // Start new transaction for inserts
 
-            // BATCH PROCESSING: Insert/Update in chunks of 50 to prevent DB Freeze
+            // BATCH PROCESSING: Bulk Insert/Update in chunks of 50
             const BATCH_SIZE = 50;
             for (let i = 0; i < data.reconciliations.length; i += BATCH_SIZE) {
                 const batch = data.reconciliations.slice(i, i + BATCH_SIZE);
+                const values = [];
+                const valueSets = [];
+                let paramIndex = 1;
 
-                // Process each batch
                 for (const r of batch) {
-                    await client.query(`
-                        INSERT INTO reconciliations (
+                    valueSets.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9})`);
+                    values.push(
+                        r.id, r.reconciliation_number, r.cashier_id, r.accountant_id,
+                        r.reconciliation_date, r.system_sales, r.total_receipts,
+                        r.surplus_deficit, r.status, r.notes
+                    );
+                    paramIndex += 10;
+                }
+
+                const query = `
+                    INSERT INTO reconciliations (
                             id, reconciliation_number, cashier_id, accountant_id, 
                             reconciliation_date, system_sales, total_receipts, 
                             surplus_deficit, status, notes
-                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                        ON CONFLICT (id) DO UPDATE SET 
+                    ) VALUES ${valueSets.join(', ')}
+                    ON CONFLICT (id) DO UPDATE SET 
                         status = EXCLUDED.status,
                         reconciliation_number = EXCLUDED.reconciliation_number,
                         cashier_id = EXCLUDED.cashier_id,
@@ -230,12 +241,9 @@ app.post('/api/sync/push', async (req, res) => {
                         total_receipts = EXCLUDED.total_receipts,
                         surplus_deficit = EXCLUDED.surplus_deficit,
                         notes = EXCLUDED.notes
-                    `, [
-                        r.id, r.reconciliation_number, r.cashier_id, r.accountant_id,
-                        r.reconciliation_date, r.system_sales, r.total_receipts,
-                        r.surplus_deficit, r.status, r.notes
-                    ]);
-                }
+                `;
+
+                await client.query(query, values);
             }
         }
 
@@ -243,24 +251,40 @@ app.post('/api/sync/push', async (req, res) => {
         // 5. Sync Bank Receipts
         if (data.bankReceipts) {
             const brIds = data.bankReceipts.map(br => br.id);
-            for (const br of data.bankReceipts) {
-                // Determine operation type (backward compatibility)
-                const opType = br.operation_type || br.bank_name || 'عملية بنكية';
 
-                await client.query(`
-                    INSERT INTO bank_receipts (id, reconciliation_id, bank_name, amount)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (id) DO UPDATE SET 
-                    reconciliation_id = EXCLUDED.reconciliation_id,
-                    bank_name = EXCLUDED.bank_name,
-                    amount = EXCLUDED.amount
-                `, [br.id, br.reconciliation_id, opType, br.amount]);
-            }
-            // DELETE bank_receipts (OPTIMIZED)
+            // 1. DELETE logic First
             if (brIds.length > 0) {
                 await client.query('DELETE FROM bank_receipts WHERE NOT (id = ANY($1))', [brIds]);
             } else {
                 await client.query('DELETE FROM bank_receipts');
+            }
+            await client.query('COMMIT'); // Commit delete
+            await client.query('BEGIN');  // Begin inserts
+
+            // BATCH PROCESSING: Bulk Insert/Update
+            const BATCH_SIZE = 50;
+            for (let i = 0; i < data.bankReceipts.length; i += BATCH_SIZE) {
+                const batch = data.bankReceipts.slice(i, i + BATCH_SIZE);
+                const values = [];
+                const valueSets = [];
+                let paramIndex = 1;
+
+                for (const br of batch) {
+                    const opType = br.operation_type || br.bank_name || 'عملية بنكية';
+                    valueSets.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`);
+                    values.push(br.id, br.reconciliation_id, opType, br.amount);
+                    paramIndex += 4;
+                }
+
+                const query = `
+                    INSERT INTO bank_receipts (id, reconciliation_id, bank_name, amount)
+                    VALUES ${valueSets.join(', ')}
+                    ON CONFLICT (id) DO UPDATE SET 
+                        reconciliation_id = EXCLUDED.reconciliation_id,
+                        bank_name = EXCLUDED.bank_name,
+                        amount = EXCLUDED.amount
+                `;
+                await client.query(query, values);
             }
         }
 
@@ -288,35 +312,49 @@ app.post('/api/sync/push', async (req, res) => {
             sendNotification('تصفية جديدة 💰', msg).catch(console.error);
         }
 
-        // 6. Sync Cash Receipts
-        // 6. Sync Cash Receipts
+        // 7. Sync Cash Receipts
         if (data.cashReceipts) {
             console.log('Syncing Cash Receipts:', JSON.stringify(data.cashReceipts.slice(0, 3))); // Log first 3 items
             const crIds = data.cashReceipts.map(cr => cr.id);
-            for (const cr of data.cashReceipts) {
-                // Desktop has 'total_amount', Server has 'amount'
-                const amount = parseFloat(cr.total_amount || cr.amount || 0);
 
-                // Desktop has 'denomination', Server uses 'notes' for description
-                let note = cr.notes;
-                if (!note && cr.denomination) {
-                    note = `فئة ${cr.denomination}`;
-                }
-
-                await client.query(`
-                    INSERT INTO cash_receipts (id, reconciliation_id, amount, notes)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (id) DO UPDATE SET 
-                    reconciliation_id = EXCLUDED.reconciliation_id,
-                    amount = EXCLUDED.amount,
-                    notes = EXCLUDED.notes
-                `, [cr.id, cr.reconciliation_id, amount, note]);
-            }
-            // DELETE cash_receipts (OPTIMIZED)
+            // 1. DELETE logic First
             if (crIds.length > 0) {
                 await client.query('DELETE FROM cash_receipts WHERE NOT (id = ANY($1))', [crIds]);
             } else {
                 await client.query('DELETE FROM cash_receipts');
+            }
+            await client.query('COMMIT'); // Commit delete
+            await client.query('BEGIN');  // Begin inserts
+
+            // BATCH PROCESSING: Bulk Insert/Update
+            const BATCH_SIZE = 50;
+            for (let i = 0; i < data.cashReceipts.length; i += BATCH_SIZE) {
+                const batch = data.cashReceipts.slice(i, i + BATCH_SIZE);
+                const values = [];
+                const valueSets = [];
+                let paramIndex = 1;
+
+                for (const cr of batch) {
+                    const amount = parseFloat(cr.total_amount || cr.amount || 0);
+                    let note = cr.notes;
+                    if (!note && cr.denomination) {
+                        note = `فئة ${cr.denomination}`;
+                    }
+
+                    valueSets.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3})`);
+                    values.push(cr.id, cr.reconciliation_id, amount, note);
+                    paramIndex += 4;
+                }
+
+                const query = `
+                    INSERT INTO cash_receipts (id, reconciliation_id, amount, notes)
+                    VALUES ${valueSets.join(', ')}
+                    ON CONFLICT (id) DO UPDATE SET 
+                        reconciliation_id = EXCLUDED.reconciliation_id,
+                        amount = EXCLUDED.amount,
+                        notes = EXCLUDED.notes
+                `;
+                await client.query(query, values);
             }
         }
 
