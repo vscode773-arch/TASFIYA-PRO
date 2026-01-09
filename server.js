@@ -314,7 +314,7 @@ app.post('/api/sync/push', async (req, res) => {
 
         // 7. Sync Cash Receipts
         if (data.cashReceipts) {
-            console.log('Syncing Cash Receipts:', JSON.stringify(data.cashReceipts.slice(0, 3))); // Log first 3 items
+
             const crIds = data.cashReceipts.map(cr => cr.id);
 
             // 1. DELETE logic First
@@ -669,6 +669,13 @@ const initDB = async () => {
             
             -- Create index for faster sorting by reconciliation_number
             CREATE INDEX IF NOT EXISTS idx_reconciliation_number ON reconciliations(reconciliation_number DESC);
+            
+            -- CRITICAL PERFORMANCE INDEXES: Prevent Full Table Scans on Joins/Deletes
+            CREATE INDEX IF NOT EXISTS idx_reconciliations_cashier ON reconciliations(cashier_id);
+            CREATE INDEX IF NOT EXISTS idx_reconciliations_date ON reconciliations(reconciliation_date);
+            CREATE INDEX IF NOT EXISTS idx_bank_rec_id ON bank_receipts(reconciliation_id);
+            CREATE INDEX IF NOT EXISTS idx_cash_rec_id ON cash_receipts(reconciliation_id);
+            CREATE INDEX IF NOT EXISTS idx_cashiers_branch ON cashiers(branch_id);
         `);
         client.release();
         console.log('Database initialized');
