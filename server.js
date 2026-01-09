@@ -202,6 +202,11 @@ app.post('/api/sync/push', async (req, res) => {
                 await client.query('DELETE FROM reconciliations');
             }
 
+            // CRITICAL FIX: Commit deletions IMMEDIATELY. 
+            // This prevents rollbacks if the subsequent heavy insert loop times out.
+            await client.query('COMMIT');
+            await client.query('BEGIN'); // Start new transaction for inserts
+
             // BATCH PROCESSING: Insert/Update in chunks of 50 to prevent DB Freeze
             const BATCH_SIZE = 50;
             for (let i = 0; i < data.reconciliations.length; i += BATCH_SIZE) {
