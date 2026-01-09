@@ -195,6 +195,13 @@ app.post('/api/sync/push', async (req, res) => {
                 );
             }
 
+            // 1. DELETE logic First (Cleanup before heavy lifting)
+            if (recIds.length > 0) {
+                await client.query('DELETE FROM reconciliations WHERE NOT (id = ANY($1))', [recIds]);
+            } else {
+                await client.query('DELETE FROM reconciliations');
+            }
+
             // BATCH PROCESSING: Insert/Update in chunks of 50 to prevent DB Freeze
             const BATCH_SIZE = 50;
             for (let i = 0; i < data.reconciliations.length; i += BATCH_SIZE) {
@@ -225,15 +232,8 @@ app.post('/api/sync/push', async (req, res) => {
                     ]);
                 }
             }
-            // DELETE reconciliations that were deleted locally
-            // DELETE reconciliations that were deleted locally (OPTIMIZED for large datasets)
-            if (recIds.length > 0) {
-                // Use ANY($1) for efficient array handling instead of thousands of placeholders
-                await client.query('DELETE FROM reconciliations WHERE NOT (id = ANY($1))', [recIds]);
-            } else {
-                await client.query('DELETE FROM reconciliations');
-            }
         }
+
 
         // 5. Sync Bank Receipts
         if (data.bankReceipts) {
