@@ -321,6 +321,33 @@ app.post('/api/sync/push', async (req, res) => {
         }
 
         await client.query('COMMIT');
+
+        // 6. Send Notifications (Moved AFTER commit to ensure data is saved first)
+        if (trulyNewReconciliations && trulyNewReconciliations.length > 0) {
+            const count = trulyNewReconciliations.length;
+            const lastRec = trulyNewReconciliations[0];
+
+            // Get cashier name (we need to query this separately now or assume it's valid)
+            // Since we committed, we can query safely or just use what we have.
+            // For simplicity and speed, let's just send the alert.
+            // To get the name properly, we can do a quick check or just say "New Reconciliation"
+            // Or better, since we have the data in 'trulyNewReconciliations', we can use it.
+            // But we need the cashier NAME. 
+            // We can do a quick query here since it's after commit, it won't block the transaction.
+            let cashierName = 'الكاشير';
+            try {
+                const cRes = await pool.query('SELECT name FROM cashiers WHERE id = $1', [lastRec.cashier_id]);
+                if (cRes.rows.length > 0) cashierName = cRes.rows[0].name;
+            } catch (e) { console.error('Error getting cashier name for notify:', e); }
+
+            const msg = count === 1
+                ? `تصفية جديدة #${lastRec.reconciliation_number} من ${cashierName}`
+                : `تم إضافة ${count} تصفيات جديدة`;
+
+            // Fire and forget notification
+            sendNotification('تصفية جديدة 💰', msg).catch(console.error);
+        }
+
         res.json({ success: true, message: 'Sync successful' });
     } catch (err) {
         await client.query('ROLLBACK');
