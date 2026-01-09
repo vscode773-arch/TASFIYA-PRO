@@ -330,6 +330,25 @@ app.post('/api/sync/push', async (req, res) => {
     }
 });
 
+// API: Emergency Reset - Delete all data (for clean sync)
+app.post('/api/reset-data', async (req, res) => {
+    const { apiKey } = req.body;
+
+    if (apiKey !== process.env.SYNC_API_KEY) {
+        return res.status(403).json({ error: 'Invalid API Key' });
+    }
+
+    try {
+        await pool.query('DELETE FROM cash_receipts');
+        await pool.query('DELETE FROM bank_receipts');
+        await pool.query('DELETE FROM reconciliations');
+
+        res.json({ success: true, message: 'All data deleted. Ready for fresh sync.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // API: Metadata
 app.get('/api/metadata', async (req, res) => {
     try {
