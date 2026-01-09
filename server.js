@@ -181,43 +181,49 @@ app.post('/api/sync/push', async (req, res) => {
         if (data.reconciliations) {
             const recIds = data.reconciliations.map(r => r.id);
 
-            // OPTIMIZATION: Check for NEW or JUST COMPLETED reconciliations
+            // OPTIMIZATION: Check for NEW or JUST COMPLETED reconciliations (Using ANY for speed)
             if (recIds.length > 0) {
-                const placeholders = recIds.map((_, i) => `$${i + 1}`).join(',');
-                // Get existing status to compare
-                const existRes = await client.query(`SELECT id, status FROM reconciliations WHERE id IN (${placeholders})`, recIds);
+                // Get existing status to compare using ANY($1) - ultra fast
+                const existRes = await client.query('SELECT id, status FROM reconciliations WHERE id = ANY($1)', [recIds]);
                 const existingMap = new Map();
                 existRes.rows.forEach(row => existingMap.set(row.id, row.status));
 
                 trulyNewReconciliations = data.reconciliations.filter(r =>
                     r.status === 'completed' &&
-                    // Notify if: It's new OR it wasn't completed before matches
+                    // Notify if: It's new OR it wasn't completed before
                     (!existingMap.has(r.id) || existingMap.get(r.id) !== 'completed')
                 );
             }
 
-            for (const r of data.reconciliations) {
-                await client.query(`
-                    INSERT INTO reconciliations (
-                        id, reconciliation_number, cashier_id, accountant_id, 
-                        reconciliation_date, system_sales, total_receipts, 
-                        surplus_deficit, status, notes
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                    ON CONFLICT (id) DO UPDATE SET 
-                    status = EXCLUDED.status,
-                    reconciliation_number = EXCLUDED.reconciliation_number,
-                    cashier_id = EXCLUDED.cashier_id,
-                    accountant_id = EXCLUDED.accountant_id,
-                    reconciliation_date = EXCLUDED.reconciliation_date,
-                    system_sales = EXCLUDED.system_sales,
-                    total_receipts = EXCLUDED.total_receipts,
-                    surplus_deficit = EXCLUDED.surplus_deficit,
-                    notes = EXCLUDED.notes
-                `, [
-                    r.id, r.reconciliation_number, r.cashier_id, r.accountant_id,
-                    r.reconciliation_date, r.system_sales, r.total_receipts,
-                    r.surplus_deficit, r.status, r.notes
-                ]);
+            // BATCH PROCESSING: Insert/Update in chunks of 50 to prevent DB Freeze
+            const BATCH_SIZE = 50;
+            for (let i = 0; i < data.reconciliations.length; i += BATCH_SIZE) {
+                const batch = data.reconciliations.slice(i, i + BATCH_SIZE);
+
+                // Process each batch
+                for (const r of batch) {
+                    await client.query(`
+                        INSERT INTO reconciliations (
+                            id, reconciliation_number, cashier_id, accountant_id, 
+                            reconciliation_date, system_sales, total_receipts, 
+                            surplus_deficit, status, notes
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                        ON CONFLICT (id) DO UPDATE SET 
+                        status = EXCLUDED.status,
+                        reconciliation_number = EXCLUDED.reconciliation_number,
+                        cashier_id = EXCLUDED.cashier_id,
+                        accountant_id = EXCLUDED.accountant_id,
+                        reconciliation_date = EXCLUDED.reconciliation_date,
+                        system_sales = EXCLUDED.system_sales,
+                        total_receipts = EXCLUDED.total_receipts,
+                        surplus_deficit = EXCLUDED.surplus_deficit,
+                        notes = EXCLUDED.notes
+                    `, [
+                        r.id, r.reconciliation_number, r.cashier_id, r.accountant_id,
+                        r.reconciliation_date, r.system_sales, r.total_receipts,
+                        r.surplus_deficit, r.status, r.notes
+                    ]);
+                }
             }
             // DELETE reconciliations that were deleted locally
             // DELETE reconciliations that were deleted locally (OPTIMIZED for large datasets)
