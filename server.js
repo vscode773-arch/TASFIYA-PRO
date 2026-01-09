@@ -60,7 +60,7 @@ app.get('/api/config', (req, res) => {
 
 // Authentication Middleware ---
 const authMiddleware = (req, res, next) => {
-    const publicPaths = ['/login', '/api/login', '/', '/api/sync/push', '/api/config'];
+    const publicPaths = ['/login', '/api/login', '/', '/api/sync/push', '/api/config', '/api/reset-data'];
     if (publicPaths.includes(req.path) || req.path.startsWith('/css') || req.path.startsWith('/js')) {
         return next();
     }
